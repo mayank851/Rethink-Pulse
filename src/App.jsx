@@ -215,4 +215,164 @@ function Overview({ lb }) {
                     const col=hit?"#10B981":"#EF4444";
                     return <div key={key} style={{background:hit?"rgba(16,185,129,0.07)":"rgba(239,68,68,0.07)",border:`1px solid ${col}15`,borderRadius:6,padding:"6px 4px",textAlign:"center"}}>
                       <div style={{fontSize:8,color:"#4B5563",marginBottom:3}}>{lbl}</div>
-                      <div style={{fontFamily:"Space Mono,monospace",fontSize:12,fontWeight:700,colo
+                      <div style={{fontFamily:"Space Mono,monospace",fontSize:12,fontWeight:700,color:col}}>{bk[key]}%</div>
+                    </div>;
+                  })}
+                </div>
+              )}
+              <div style={{display:"flex",justifyContent:"space-between",paddingTop:10,borderTop:"1px solid #111116"}}>
+                <div><div style={{fontSize:8,color:"#FC8019",letterSpacing:1.5}}>SWIGGY W4</div><div style={{fontFamily:"Space Mono,monospace",fontSize:16,fontWeight:700,color:a.np<0?"#EF4444":"#E2E8F0",marginTop:2}}>{fmt(a.np)}</div></div>
+                <div style={{textAlign:"right"}}><div style={{fontSize:8,color:"#E23744",letterSpacing:1.5}}>ZOMATO FEB</div><div style={{fontFamily:"Space Mono,monospace",fontSize:16,fontWeight:700,marginTop:2}}>{fmt(zoMo)}</div></div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function BrandView({ brand }) {
+  const meta = BRANDS_META[brand];
+  return (
+    <div style={{padding:"24px",maxWidth:1120,margin:"0 auto"}}>
+      <div style={{background:`linear-gradient(135deg,#0E0E14 0%,${meta.color}10 100%)`,border:`1px solid ${meta.color}25`,borderRadius:12,padding:"20px 28px",marginBottom:24}}>
+        <div style={{fontSize:10,color:meta.color,letterSpacing:4,fontFamily:"Syne,sans-serif",fontWeight:700}}>BRAND DEEP DIVE · FEB 2026</div>
+        <div style={{fontSize:28,fontWeight:800,fontFamily:"Syne,sans-serif",marginTop:4,marginBottom:16}}>{meta.full}</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12}}>
+          {WEEKS.map(wk=>{
+            const rows=SWIGGY_WEEKS.filter(r=>r.brand===brand&&r.week===wk&&r.ns>0);
+            const a={np:0,ns:0,gmv:0,comm:0,disc:0,ads:0,orders:0};
+            rows.forEach(r=>{a.np+=r.np;a.ns+=r.ns;a.gmv+=r.gmv;a.comm+=r.comm;a.disc+=r.disc;a.ads+=r.ads;a.orders+=r.orders;});
+            const k=kpis(a); const hs=healthPct(k);
+            const hsC=hs>=75?"#10B981":hs>=50?"#F59E0B":"#EF4444";
+            return (
+              <div key={wk} style={{background:"rgba(0,0,0,0.3)",borderRadius:8,padding:"12px 14px",border:`1px solid ${meta.color}15`,borderLeft:`3px solid ${wk==="22-Feb"?meta.color:`${meta.color}40`}`}}>
+                <div style={{fontSize:8,color:"#4B5563",marginBottom:6}}>{wk}</div>
+                <div style={{fontFamily:"Space Mono,monospace",fontSize:20,fontWeight:800,color:k?.net_margin>=60?"#10B981":k?.net_margin<0?"#EF4444":"#F59E0B"}}>{k?`${k.net_margin}%`:"—"}</div>
+                <div style={{fontSize:9,color:"#4B5563",marginTop:2}}>Net Pay · {fmt(a.np)}</div>
+                {k&&<div style={{fontSize:9,color:hsC,marginTop:4}}>HS {hs}/100</div>}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:16}}>
+        {Object.keys(LOCS).map(loc=><LocationCard key={loc} brand={brand} loc={loc}/>)}
+      </div>
+    </div>
+  );
+}
+
+function LocationCard({ brand, loc }) {
+  const meta=BRANDS_META[brand];
+  const swRows=byOutlet(SWIGGY_WEEKS,brand,loc);
+  const zoMo=ZOMATO_MONTHLY.find(r=>r.brand===brand&&r.loc===loc);
+  const latest=[...swRows].filter(r=>r.ns>0).pop();
+  const latK=kpis(latest);
+  const hs=healthPct(latK);
+  const hsC=hs>=75?"#10B981":hs>=50?"#F59E0B":"#EF4444";
+  const prev=[...swRows].filter(r=>r.ns>0).slice(-2,-1)[0];
+  const chg=latest&&prev?pctChg(latK?.net_margin,kpis(prev)?.net_margin):null;
+  const trend=WEEKS.map(w=>{const r=swRows.find(x=>x.week===w);return r?.ns>0?+(r.np/r.ns*100).toFixed(1):0;});
+  const zoK=kpis(zoMo);
+  return (
+    <div style={{background:"#0E0E14",border:"1px solid #1A1A24",borderRadius:10,overflow:"hidden"}}>
+      <div style={{padding:"13px 18px",borderBottom:"1px solid #1A1A24",background:`${meta.color}06`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <div>
+          <div style={{fontSize:8,color:"#4B5563",letterSpacing:2,fontFamily:"Syne,sans-serif",fontWeight:700}}>LOCATION</div>
+          <div style={{fontSize:17,fontWeight:800,fontFamily:"Syne,sans-serif",color:"#E2E8F0",marginTop:2}}>{LOCS[loc]}</div>
+        </div>
+        <div style={{display:"flex",gap:8,alignItems:"center"}}>
+          {chg!==null&&<div style={{fontSize:10,color:chg>=0?"#10B981":"#EF4444",background:chg>=0?"rgba(16,185,129,0.1)":"rgba(239,68,68,0.1)",padding:"3px 8px",borderRadius:20}}>{chg>=0?"↑":"↓"} {Math.abs(chg)}pp WoW</div>}
+          {hs!==null&&<div style={{fontSize:10,color:hsC,background:`${hsC}15`,padding:"3px 9px",borderRadius:20,fontFamily:"Space Mono,monospace",fontWeight:700}}>HS {hs}/100</div>}
+        </div>
+      </div>
+      <div style={{padding:"14px 18px"}}>
+        <div style={{fontSize:8,color:"#FC8019",letterSpacing:2,fontFamily:"Syne,sans-serif",fontWeight:700,marginBottom:10}}>SWIGGY W4 · 5 KPIs vs TARGET</div>
+        {latK ? (
+          <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:6,marginBottom:14}}>
+            <KPIBox label="Net Pay%" val={`${latK.net_margin}%`} hitKey="net_margin"/>
+            <KPIBox label="Comm%"    val={`${latK.commission_pct}%`} hitKey="commission_pct"/>
+            <KPIBox label="Disc%"    val={`${latK.discount_pct}%`} hitKey="discount_pct"/>
+            <KPIBox label="Ads%"     val={`${latK.ads_pct}%`} hitKey="ads_pct"/>
+            <KPIBox label="AOV"      val={`₹${latK.aov}`} hitKey={null}/>
+          </div>
+        ) : <div style={{color:"#4B5563",fontSize:11,marginBottom:14}}>No Swiggy W4 data</div>}
+        <div style={{fontSize:8,color:"#4B5563",letterSpacing:1.5,marginBottom:4}}>NET PAYOUT % TREND · SWIGGY W1→W4</div>
+        <Spark data={trend} color="#FC8019" h={44}/>
+        <div style={{display:"flex",gap:4,marginTop:6,flexWrap:"wrap"}}>
+          {WEEKS.map((w,i)=>{
+            const r=swRows.find(x=>x.week===w); const k2=kpis(r);
+            return <div key={w} style={{fontSize:9,padding:"2px 7px",borderRadius:4,fontFamily:"Space Mono,monospace",background:!k2?"#111116":k2.net_margin>=60?"rgba(16,185,129,0.12)":k2.net_margin<0?"rgba(239,68,68,0.12)":"rgba(245,158,11,0.12)",color:!k2?"#4B5563":k2.net_margin>=60?"#10B981":k2.net_margin<0?"#EF4444":"#F59E0B"}}>W{i+1} {k2?`${k2.net_margin}%`:"—"}</div>;
+          })}
+        </div>
+        <div style={{borderTop:"1px solid #111116",marginTop:14,paddingTop:14}}>
+          <div style={{fontSize:8,color:"#E23744",letterSpacing:2,fontFamily:"Syne,sans-serif",fontWeight:700,marginBottom:10}}>ZOMATO FEB 2026 · MONTHLY SETTLEMENT · 5 KPIs</div>
+          {zoK ? (
+            <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:6}}>
+              <KPIBox label="Net Pay%" val={`${zoK.net_margin}%`} hitKey="net_margin"/>
+              <KPIBox label="Comm%"    val={`${zoK.commission_pct}%`} hitKey="commission_pct"/>
+              <KPIBox label="Disc%"    val={`${zoK.discount_pct}%`} hitKey="discount_pct"/>
+              <KPIBox label="Ads%"     val={`${zoK.ads_pct}%`} hitKey="ads_pct"/>
+              <KPIBox label="AOV"      val={`₹${zoK.aov}`} hitKey={null}/>
+            </div>
+          ) : <div style={{color:"#4B5563",fontSize:11}}>No Zomato data</div>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function App() {
+  const [tab, setTab] = useState("overview");
+  const lb = buildLeaderboard();
+  const TABS=[
+    {id:"overview",label:"◈ Overview",color:"#7C3AED"},
+    {id:"TOP",label:"TOP · Taste of Protein",color:BRANDS_META.TOP.color},
+    {id:"FB",label:"FB · FytBlend",color:BRANDS_META.FB.color},
+    {id:"FI",label:"FI · Foldit",color:BRANDS_META.FI.color},
+  ];
+  return (
+    <div style={{minHeight:"100vh",background:"#07070A",color:"#E2E8F0",fontFamily:"'DM Sans',system-ui,sans-serif"}}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Space+Mono:wght@700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap');
+        *{box-sizing:border-box;margin:0;padding:0}
+        ::-webkit-scrollbar{width:4px;height:4px}
+        ::-webkit-scrollbar-track{background:#0E0E14}
+        ::-webkit-scrollbar-thumb{background:#2A2A38;border-radius:2px}
+      `}</style>
+      <div style={{position:"sticky",top:0,zIndex:50,background:"rgba(7,7,10,0.96)",backdropFilter:"blur(12px)",borderBottom:"1px solid #1A1A24"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 24px"}}>
+          <div style={{display:"flex",alignItems:"center",gap:12}}>
+            <div style={{width:34,height:34,borderRadius:8,background:"linear-gradient(135deg,#7C3AED,#4F46E5)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>⚡</div>
+            <div>
+              <div style={{fontFamily:"Syne,sans-serif",fontWeight:800,fontSize:13,letterSpacing:3}}>RETHINK PULSE</div>
+              <div style={{fontSize:9,color:"#4B5563",letterSpacing:2.5,marginTop:1}}>PAYOUT INTELLIGENCE · FEB 2026</div>
+            </div>
+          </div>
+          <div style={{display:"flex",gap:16,alignItems:"center"}}>
+            <div style={{display:"flex",gap:10,fontSize:9,color:"#4B5563"}}>
+              <span>Net Pay <span style={{color:"#818CF8"}}>≥60%</span></span>
+              <span>·</span><span>Comm <span style={{color:"#FCD34D"}}>≤30%</span></span>
+              <span>·</span><span>Disc <span style={{color:"#FB923C"}}>≤30%</span></span>
+              <span>·</span><span>Ads <span style={{color:"#F472B6"}}>≤10%</span></span>
+            </div>
+            <div style={{background:"rgba(16,185,129,0.12)",color:"#10B981",padding:"4px 12px",borderRadius:20,fontSize:10,fontWeight:700,border:"1px solid rgba(16,185,129,0.25)"}}>W4 LIVE</div>
+          </div>
+        </div>
+        <div style={{display:"flex",padding:"0 16px",overflowX:"auto",borderTop:"1px solid #111116"}}>
+          {TABS.map(t=>(
+            <button key={t.id} onClick={()=>setTab(t.id)} style={{background:"none",border:"none",padding:"10px 18px",cursor:"pointer",fontSize:10,fontWeight:700,fontFamily:"Syne,sans-serif",letterSpacing:1.5,color:tab===t.id?t.color:"#4B5563",borderBottom:`2px solid ${tab===t.id?t.color:"transparent"}`,whiteSpace:"nowrap",transition:"color 0.15s,border-color 0.15s"}}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      {tab==="overview"?<Overview lb={lb}/>:<BrandView brand={tab}/>}
+      <div style={{textAlign:"center",padding:"28px 24px 20px",fontSize:9,color:"#1A1A24",letterSpacing:2,borderTop:"1px solid #111116",marginTop:32}}>
+        RETHINK FUTURE PVT LTD · CONFIDENTIAL · INTERNAL USE ONLY
+      </div>
+    </div>
+  );
+}
